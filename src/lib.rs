@@ -367,6 +367,42 @@ pub fn dump(level: Level, stage: Stage, msg: std::fmt::Arguments) {
     }
 }
 
+pub fn print(color: Color, style: Style, endl: bool, msg: std::fmt::Arguments) {
+    let conf = unsafe {
+        #[cfg(feature = "mt")]
+        {
+            CONF.lock().unwrap()
+        }
+        #[cfg(not(feature = "mt"))]
+        {
+            &CONF
+        }
+    };
+
+    let col = color_code(color);
+    let sty = style_code(style);
+
+    if endl {
+        println!("{}{}{}{}", sty, col, msg, reset_code(Reset::All));
+    } else {
+        print!("{}{}{}{}", sty, col, msg, reset_code(Reset::All));
+    }
+}
+
+#[macro_export]
+macro_rules! col {
+    ($color:expr, $($arg:tt)*) => {
+        $crate::print($color, $crate::Style::None, false, format_args!($($arg)*))
+    };
+}
+
+#[macro_export]
+macro_rules! coln {
+    ($color:expr, $($arg:tt)*) => {
+        $crate::print($color, $crate::Style::None, true, format_args!($($arg)*));
+    };
+}
+
 #[macro_export]
 macro_rules! debug {
     (lex, $($arg:tt)*) => {
